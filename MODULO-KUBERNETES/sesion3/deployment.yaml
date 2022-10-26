@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: main
+        image: lemoncodersbc/go-hello-world
+        ports:
+        - containerPort: 80
+        env:
+        - name: Foo
+          value: Barrcode1

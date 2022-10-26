@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: "2022-10-25T17:48:09Z"
+  generateName: api-68c8dc7458-
+  labels:
+    app: api
+    pod-template-hash: 68c8dc7458
+  name: api-68c8dc7458-2gfd9
+  namespace: default
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: ReplicaSet
+    name: api-68c8dc7458
+    uid: 8d1b6078-b7a2-4986-8400-4d130e57b530
+  resourceVersion: "197618"
+  uid: 77f9f99b-a6be-4e67-9bb9-fb9fbf344842
+spec:
+  containers:
+  - env:
+    - name: Foo
+      value: Barrcode
+    image: lemoncodersbc/go-hello-world
+    imagePullPolicy: Always
+    name: main
+    ports:
+    - containerPort: 80
+      protocol: TCP
+    resources: {}
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: kube-api-access-pfnl8
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  nodeName: minikube
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext: {}
+  serviceAccount: default
+  serviceAccountName: default
+  terminationGracePeriodSeconds: 30
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - name: kube-api-access-pfnl8
+    projected:
+      defaultMode: 420
+      sources:
+      - serviceAccountToken:
+          expirationSeconds: 3607
+          path: token
+      - configMap:
+          items:
+          - key: ca.crt
+            path: ca.crt
+          name: kube-root-ca.crt
+      - downwardAPI:
+          items:
+          - fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+            path: namespace
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-10-25T17:48:09Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-10-25T17:48:24Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-10-25T17:48:24Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-10-25T17:48:09Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://1656e977d6a60ee6c21b5def92c8e5874a82b7a250d868614d886c57770ffd4a
+    image: lemoncodersbc/go-hello-world:latest
+    imageID: docker-pullable://lemoncodersbc/go-hello-world@sha256:6336cc5218fb128f6227dec1044b4672fd27796401ebc951eb58a5574e7753ca
+    lastState: {}
+    name: main
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-10-25T17:48:24Z"
+  hostIP: 192.168.49.2
+  phase: Running
+  podIP: 172.17.0.15
+  podIPs:
+  - ip: 172.17.0.15
+  qosClass: BestEffort
+  startTime: "2022-10-25T17:48:09Z"
