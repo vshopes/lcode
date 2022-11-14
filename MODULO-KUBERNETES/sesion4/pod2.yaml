@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: demo
+  labels:
+    name: demo
+spec:
+  containers:
+  - name: main
+    image: busybox
+    args:
+      - "tail"
+      - "-f" 
+      - "/dev/null"
+    env:
+      - name: DEMO_VAR
+        valueFrom:
+           configMapKey:
+              key: user
+              name: democm

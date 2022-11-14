@@ -105,7 +105,7 @@ Por ejemplo, cuando se crea un recurso ingress actualiza nginx y reinicia nginx.
 
 Los servicios suelen ser **ClusterIP**.
 
-Es un balnaceador de L7, solo **http y https**. Por ejemplo no podemos exponer un mysql. Lo tendría que hacer pa través de otro servicio.
+Es un balanceador de L7, solo **http y https**. Por ejemplo no podemos exponer un mysql. Lo tendría que hacer a través de otro servicio.
 Hay una beta para exponer--->.
 
 canonico, el de kuber
@@ -175,7 +175,7 @@ las de nginx
 https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
 
 
-Cookiee affinity, redirige contra el mismo pod, "sticky sessions"
+Cookie affinity, redirige contra el mismo pod, "sticky sessions"
 
 
 
