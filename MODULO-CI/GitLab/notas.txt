@@ -1,0 +1,453 @@
+git checkout feature/gitlab-2022
+
+ cd 03-cd/02-gitlab-2022/
+
+
+sudo chmod +x build_gitlab_docker.sh &&  sudo ./build_gitlab_docker.sh
+
+sudo /bin/bash build_gitlab_docker.sh
+
+sudo tail -F /tmp/runner_register.log
+
+
+
+sudo vim /etc/docker/daemon.json
+
+{"insecure-registries" : ["gitlab.local:5001", "gitlab.local:8888"]}
+
+sudo systemctl restart docker
+
+
+
+    Linux en el fichero /etc/hosts
+    Windows en el fichero c:\windows\system32\drivers\etc\hosts
+
+192.168.1.187   gitlab.local
+
+
+
+| GitHub       | Gitlab        | Significado                                                                      |
+|--------------|---------------|----------------------------------------------------------------------------------|
+| Pull request | Merge request | Solicitud para integrar una ramificación en el maestro                           |
+| Gist         | Snippet       | Trozo de código                                                                  |
+| Repositorio  | Proyecto      | Contenedor con el repositorio, los anexos y los ajustes específicos del proyecto |
+| Organización | Grupo         | Nivel en el que se asignan proyectos a usuarios                                  |
+
+
+
+sudo /bin/bash gitlab/docker/runner_register.sh
+
+
+ssh-keygen -t rsa -b 4096 -C "developer1@localhost"
+
+/home/bootcamp/.ssh/developer1_rsa 
+
+.ssh/config
+
+Host gitlab.local
+  Hostname gitlab.local
+  PreferredAuthentications publickey
+  IdentityFile ~/.ssh/developer1_rsa 
+  Port 2222
+  User developer1
+
+
+
+
+#####PIPELINES
+
+.gitlab-ci.yml
+ 
+ https://docs.gitlab.com/15.4/ee/ci/yaml/
+ 
+ 
+ 
+ dependency proxy 
+ stages:
+    - stage1
+default:
+    image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.8-slim
+
+testjob:
+    stage: stage1
+    image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/python:3.9-slim
+    before_script:
+              - echo "Hola mundo"
+    script:
+        - echo "Adios mundo"
+
+testjob2:
+    stage: stage1
+    before_script:
+        - echo "Hola mundo"
+    script:
+        - echo "Adios mundo"
+
+https://docs.gitlab.com/ee/ci/variables/predefined_variables.html
+
+ 
+
+### variables
+variables: 
+    mi_var: "Variable defecto"
+
+
+stages:
+    - stage1
+    - stage2
+
+testjob:
+    variables:
+       mi_var: "Esto es una variable de job"
+    stage: stage1
+    script:
+      - echo $mi_var
+
+
+testjob2:
+    stage: stage2
+    script:
+      - echo $mi_var
+      
+      
+###control errores
+
+stages:
+    - stage1
+    - stage2
+    
+testjob:
+    stage: stage1
+    script:
+      - exit 1
+    allow_failure: true
+      
+testjob2:
+    stage: stage2
+    script:
+      - echo "testjob2"
+
+
+
+
+### only
+stages:
+  - stage1
+  - stage2
+  
+testjob:
+  stage: stage1
+  script:
+    - echo stage en develop
+  only:
+    - develop
+
+
+testjob2:
+  stage: stage2
+  script:
+    - echo stage en master
+  only:
+    - master
+    
+    
+    
+### when
+
+    on_success (default): Run the job only when all jobs in earlier stages succeed or have allow_failure: true.
+    manual: Run the job only when triggered manually.
+    always: Run the job regardless of the status of jobs in earlier stages.
+    on_failure: Run the job only when at least one job in an earlier stage fails.
+    delayed: Delay the execution of a job for a specified duration.
+    never: Don’t run the job.
+
+
+stages:
+    - stage1
+    - stage2
+    
+testjob:
+    stage: stage1
+    script:
+      - echo stage en develop
+    only:
+      - develop
+    
+testjob2:
+    stage: stage2
+    script:
+      - echo stage en master
+    only:
+      - master
+    when: manual
+    
+----------------------------
+stages:
+    - stage1
+    - stage2
+    - stage3
+
+testjob:
+    stage: stage1
+    script:
+        - exit 1"
+
+
+testjob2:
+    stage: stage2
+    script:
+        - echo "Adios mundo"
+    when: on_failure
+
+testjob3:
+    stage: stage3
+    script:
+        - echo "Adios mundo"
+        
+        
+        
+###### RULES
+stages:
+    - stage1
+    - stage2
+    
+variables:
+    MYVARIABLE: "global"
+
+testjob:
+    stage: stage1
+    script:
+      - echo $MYVARIABLE
+      - exit 1
+    rules:
+      - if: '$CI_COMMIT_REF_NAME  ==  "develop"  &&  $CI_PIPELINE_SOURCE  ==  "push"'
+        variables:
+          MYVARIABLE: "variable develop"
+        allow_failure: true
+      - if: '$CI_COMMIT_REF_NAME  ==  "master"  &&  $CI_PIPELINE_SOURCE  ==  "push"'
+        variables:
+          MYVARIABLE: "variable master"
+        allow_failure: true
+testjob2:
+    stage: stage2
+    script:
+      - echo stage en master
+      - env
+    rules:
+      - if: '$CI_COMMIT_REF_NAME  ==  "master"  &&  $CI_PIPELINE_SOURCE  ==  "web" && $DEPLOY == "TRUE"'
+      - if: '$CI_COMMIT_REF_NAME  ==  "master" && $CI_PIPELINE_SOURCE  ==  "push"'
+        when: manual
+
+### WORKFLOW
+
+workflow:
+  rules:
+    # Merge request from feature branch to develop
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    - if: '$CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_REF_NAME =~ /^release\//'
+      variables:
+        MYVARIABLE: "mi variable para develop y release"    
+    - if: $CI_COMMIT_REF_NAME == "master"
+      variables:
+        MYVARIABLE: "mi variable para master"    
+    - when: never
+
+stages:
+  - stage1
+  - stage2
+
+testjob:
+    stage: stage1
+    script:
+      - echo $MYVARIABLE
+      - exit 1
+    rules:
+      - if: '$CI_COMMIT_REF_NAME  ==  "develop"'
+        allow_failure: true
+
+testjob2:
+    stage: stage2
+    script:
+      - echo $MYVARIABLE
+    rules:
+      - if: '$CI_COMMIT_REF_NAME  ==  "master"'
+        when: manual
+
+
+
+## ARTIFACTS
+
+stages:
+    - stage1
+    - stage2
+
+testjob:
+    stage: stage1
+    script:
+      - echo "este es mi artifact" >> artifact.txt
+    artifacts:
+        when: on_success
+        paths:
+            - "artifact.txt"
+    only:
+      - develop
+      
+testjob2:
+    stage: stage2
+    script:
+      - cat artifact.txt
+    only:
+      - develop
+------
+
+
+stages:
+    - stage1
+    - stage2
+    - stage3
+
+testjob:
+    stage: stage1
+    script:
+      - echo "este es mi artifact1" >> artifact1.txt
+    artifacts:
+        when: on_success
+        paths:
+            - "artifact1.txt"
+      
+testjob2:
+    stage: stage2
+    script:
+      - echo "este es mi artifact2" >> artifact2.txt
+    artifacts:
+        when: on_success
+        paths:
+            - "artifact2.txt"
+
+testjob3:
+    stage: stage3
+    script:
+      - ls
+      - cat artifact1.txt
+    dependencies:
+      - testjob
+
+testjob4:
+    stage: stage3
+    script:
+      - ls
+      - cat artifact2.txt
+    dependencies:
+      - testjob2
+
+testjob5:
+    stage: stage3
+    script:
+     - ls
+    dependencies: []
+    
+    
+    ------
+stages:
+    - stage1
+
+
+testjob:
+    stage: stage1
+    script:
+        - echo "Hola"
+    artifacts:
+        reports:
+            junit: report.xml
+          
+          
+            
+## eNVIRONMENTS
+
+stages:
+    - stage1
+    - stage2
+
+testjob:
+    stage: stage1
+    script:
+       - echo $CI_COMMIT_REF_NAME >> artifact.txt
+    artifacts:
+        when: on_success
+        paths:
+            - "artifact.txt"
+      
+deploy:test:
+    stage: stage2
+    script:
+      - echo "My env is $CI_ENVIRONMENT_NAME"
+      - cat artifact.txt
+      - echo $CI_COMMIT_SHA
+    only:
+      - develop
+    environment:
+      name: test
+
+deploy:pre:
+    stage: stage2
+    script:
+      - echo "My env is $CI_ENVIRONMENT_NAME"
+      - cat artifact.txt
+      - echo $CI_COMMIT_SHA
+    only:
+      - /^release\/.*$/
+    environment:
+      name: pre
+      
+deploy:prod:
+    stage: stage2
+    script:
+      - echo "My env is $CI_ENVIRONMENT_NAME"
+      - cat artifact.txt
+      - echo $CI_COMMIT_SHA
+    only:
+      - master
+    environment:
+      name: prod
+      
+      
+### flask app
+
+stages:
+  - build
+  - deploy
+
+
+build:
+  stage: build
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY/$CI_PROJECT_PATH
+  script:
+    - echo $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_PATH/flaskapp:$CI_COMMIT_SHA . 
+    - docker push $CI_REGISTRY/$CI_PROJECT_PATH/flaskapp:$CI_COMMIT_SHA
+
+deploy:test:
+   stage: deploy
+   before_script:
+     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY/$CI_PROJECT_PATH
+     - if [[ $(docker ps --filter "name=flaskapptest" --format '{{.Names}}') == "flaskapptest" ]]; then  docker rm -f flaskapptest; else echo "No existe";  fi
+   script:
+     - docker run --name flaskapptest -d -p 8081:8080 --rm $CI_REGISTRY/$CI_PROJECT_PATH/flaskapp:$CI_COMMIT_SHA
+   only:
+     - develop
+   environment: test
+   
+deploy:prod:
+   stage: deploy
+   before_script:
+     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY/$CI_PROJECT_PATH
+     - if [[ $(docker ps --filter "name=flaskapp$" --format '{{.Names}}') == "flaskapp" ]]; then  docker rm -f flaskapp; else echo "No existe";  fi
+   script:
+     - docker run --name flaskapp -d -p 8080:8080 --rm $CI_REGISTRY/$CI_PROJECT_PATH/flaskapp:$CI_COMMIT_SHA 
+   only:
+     - master
+   environment: prod
